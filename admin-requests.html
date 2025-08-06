@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VtuberMusic | 업로드 요청 목록</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"/>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+    }
+    .container {
+      margin-top: 40px;
+    }
+    .card {
+      margin-bottom: 20px;
+    }
+    .dark-mode {
+  background-color: #121212 !important;
+  color: white !important;
+    }
+    .logo {
+      font-weight: bold;
+      font-size: 24px;
+      text-align: center;
+      margin: 20px 0;
+      color: #6f42c1;
+      cursor: pointer;
+    }
+    .btn-upload {
+      background-color: #28a745;
+      color: white;
+    }
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo" onclick="location.href='index.html'">VtuberMusic</div>
+  <div class="container">
+    <h3 class="text-center mb-4">업로드 요청 목록</h3>
+    <div id="requestList"></div>
+  </div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark-mode");
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.body.classList.remove("dark-mode");
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  });
+</script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCT2xVkAf7hlIyOyW_AwOa6d0oNNtZmg4",
+      authDomain: "vtuber-music-a6006.firebaseapp.com",
+      projectId: "vtuber-music-a6006",
+      storageBucket: "vtuber-music-a6006.firebasestorage.app",
+      messagingSenderId: "743617868846",
+      appId: "1:743617868846:web:27d350fcf6aec92556dbbf",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const requestList = document.getElementById("requestList");
+
+    function createRequestCard(doc) {
+      const data = doc.data();
+      const card = document.createElement("div");
+      card.className = "card p-3 shadow-sm";
+
+      const title = document.createElement("p");
+      title.innerHTML = `<strong>제목:</strong> ${data.title || '없음'}`;
+
+      const link = document.createElement("p");
+      link.innerHTML = `<strong>링크:</strong> <a href="${data.link || '#'}" target="_blank">${data.link || '없음'}</a>`;
+
+      const vtuber = document.createElement("p");
+      vtuber.innerHTML = `<strong>업로더:</strong> ${data.vtuber || '알 수 없음'}`;
+
+      const btnGroup = document.createElement("div");
+      btnGroup.className = "mt-2";
+
+      const note = document.createElement("p");
+      note.innerHTML = `<strong>메모:</strong> ${data.note || '없음'}`;
+      card.appendChild(note);
+
+      const uploadBtn = document.createElement("button");
+      uploadBtn.className = "btn btn-sm btn-upload me-2";
+      uploadBtn.innerText = "업로드";
+      uploadBtn.onclick = async () => {
+        if (!data.link || !data.title) {
+          alert("링크나 제목이 없습니다.");
+          return;
+        }
+
+        // 중복 확인
+        const snapshot = await db.collection("songs").where("youtubeLink", "==", data.link).get();
+        if (!snapshot.empty) {
+          alert("이미 업로드된 링크입니다.");
+          return;
+        }
+
+        await db.collection("songs").add({
+          title: data.title,
+          youtubeLink: data.link,
+          vtuber: data.vtuber || "관리자",
+          note: data.note || '',
+          createdAt: new Date()
+        });
+
+        await db.collection("songs").doc(doc.id).delete();
+        alert("업로드 완료!");
+        location.reload();
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm btn-delete";
+      deleteBtn.innerText = "삭제";
+      deleteBtn.onclick = async () => {
+        if (confirm("정말 삭제하시겠습니까?")) {
+          await db.collection("requestList").doc(doc.id).delete();
+          alert("삭제 완료!");
+          location.reload();
+        }
+      };
+
+      btnGroup.appendChild(uploadBtn);
+      btnGroup.appendChild(deleteBtn);
+
+      card.appendChild(title);
+      card.appendChild(link);
+      card.appendChild(vtuber);
+      card.appendChild(btnGroup);
+
+      requestList.appendChild(card);
+    }
+
+    db.collection("requestList")
+      .orderBy("uploadedAt", "desc")
+      .get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          requestList.innerHTML = "<p class='text-center text-muted'>요청이 없습니다.</p>";
+        } else {
+          snapshot.forEach(doc => {
+            createRequestCard(doc);
+          });
+        }
+      })
+      .catch(err => {
+        console.error("요청 로딩 실패:", err);
+        requestList.innerHTML = "<p class='text-danger'>요청을 불러오는 중 오류가 발생했습니다.</p>";
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VtuberMusic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f8f8;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 0;
+      background-color: #ffffff;
+      border-bottom: 1px solid #ddd;
+    }
+
+.dark-mode {
+  background-color: #121212 !important;
+  color: white !important;
+}
+
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #ff5ca2;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .search-container {
+      display: flex;
+      justify-content: center;
+      margin: 30px 0;
+    }
+
+    .search-container input {
+      width: 60%;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 30px;
+      outline: none;
+    }
+
+    .video-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .video-card {
+      width: 300px;
+      margin: 10px;
+      text-decoration: none;
+      color: #333;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .video-card:hover {
+      transform: scale(1.03);
+    }
+
+    .video-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .video-card .title {
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* FAB 버튼 */
+    .fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      background-color: #ff5ca2;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    /* FAB 메뉴 */
+    .fab-menu {
+      position: fixed;
+      bottom: 100px;
+      right: 30px;
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      z-index: 99;
+    }
+
+    .fab-menu.show {
+      display: flex;
+    }
+
+    .fab-menu a {
+      background-color: #ffffff;
+      color: #333;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .fab-menu a:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo">VtuberMusic</a>
+  </header>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark-mode");
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.body.classList.remove("dark-mode");
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  });
+</script>
+
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="버튜버 음악을 검색해보세요...">
+  </div>
+
+  <div class="video-list" id="videoList"></div>
+
+  <!-- FAB 메뉴 항목 -->
+  <div class="fab-menu" id="fabMenu">
+    <a href="request.html">업로드 요청</a>
+    <a href="settings.html">설정</a>
+    <a href="admin-login.html">관리자</a>
+  </div>
+
+  <!-- FAB -->
+  <div class="fab" onclick="toggleMenu()">+</div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCT2xVkAf7hlIyOyW_AwOa6d0oNNtZmg4",
+      authDomain: "vtuber-music-a6006.firebaseapp.com",
+      projectId: "vtuber-music-a6006",
+      storageBucket: "vtuber-music-a6006.firebasestorage.app",
+      messagingSenderId: "743617868846",
+      appId: "1:743617868846:web:27d350fcf6aec92556dbbf",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('fabMenu');
+      menu.classList.toggle('show');
+    }
+
+    const videoList = document.getElementById('videoList');
+
+    function getYouTubeVideoId(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function renderVideo(doc) {
+      const data = doc.data();
+      const videoId = getYouTubeVideoId(data.link || data.youtubeLink);
+      if (!videoId) return;
+
+      const card = document.createElement('a');
+      card.className = 'video-card';
+      card.href = data.link || data.youtubeLink;
+      card.target = '_blank';
+      card.innerHTML = `
+        <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" alt="썸네일" />
+        <div class="title">${data.title}</div>
+      `;
+      videoList.appendChild(card);
+    }
+
+    db.collection("songs").orderBy("createdAt", "desc").get().then(snapshot => {
+      snapshot.forEach(doc => renderVideo(doc));
+    }).catch(err => {
+      console.error("영상 로딩 오류:", err);
+    });
+  </script>
+</body>
+</html>

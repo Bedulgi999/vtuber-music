@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 - VtuberMusic</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <style>
+    body {
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    .logo {
+      text-align: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: #d63384;
+      margin-bottom: 20px;
+    }
+    .dark-mode {
+  background-color: #121212 !important;
+  color: white !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="logo">VtuberMusic</div>
+    <div class="mb-3">
+      <input type="email" id="email" class="form-control" placeholder="이메일" />
+    </div>
+    <div class="mb-3">
+      <input type="password" id="password" class="form-control" placeholder="비밀번호" />
+    </div>
+    <button class="btn btn-primary w-100" onclick="login()">로그인</button>
+    <div id="message" class="text-danger mt-3 text-center"></div>
+  </div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark-mode");
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.body.classList.remove("dark-mode");
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  });
+</script>
+
+  <!-- Firebase & Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCT2xVkAf7hlIyOyW_AwOa6d0oNNtZmg4",
+      authDomain: "vtuber-music-a6006.firebaseapp.com",
+      projectId: "vtuber-music-a6006",
+      storageBucket: "vtuber-music-a6006.appspot.com",
+      messagingSenderId: "743617868846",
+      appId: "1:743617868846:web:27d350fcf6aec92556dbbf"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const messageEl = document.getElementById("message");
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // 관리자 판별
+          if (email === "admin@admin.com") {
+            window.location.href = "admin.html";
+          } else {
+            window.location.href = "index.html";
+          }
+        })
+        .catch((error) => {
+          messageEl.textContent = "로그인 실패: " + error.message;
+        });
+    }
+  </script>
+</body>
+</html>

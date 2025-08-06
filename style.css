@@ -1,0 +1,103 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #202123;
+  color: white;
+  padding: 1em;
+}
+
+.logo {
+  font-size: 1.8em;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.search-bar {
+  position: absolute;
+  top: 1.2em;
+  right: 2em;
+}
+
+.search-bar input {
+  padding: 0.5em;
+  font-size: 1em;
+}
+
+main {
+  padding: 2em;
+}
+
+.song-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.song-item {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 1em;
+  width: 200px;
+  cursor: pointer;
+}
+
+.song-item img {
+  width: 100%;
+  height: auto;
+}
+
+.fab {
+  position: fixed;
+  right: 1.5em;
+  bottom: 1.5em;
+  width: 56px;
+  height: 56px;
+  background-color: #202123;
+  color: white;
+  border-radius: 50%;
+  font-size: 2em;
+  text-align: center;
+  line-height: 56px;
+  cursor: pointer;
+}
+
+.fab-menu {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  right: 1.5em;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.fab-menu.show {
+  display: flex;
+}
+
+.fab-menu button {
+  padding: 0.6em 1em;
+  border: none;
+  background: #444;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.request-item {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 1em;
+  margin-bottom: 1em;
+}
+
+.dark-mode {
+  background-color: #121212 !important;
+  color: white !important;
+}
